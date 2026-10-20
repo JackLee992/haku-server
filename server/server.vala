@@ -1,10 +1,14 @@
 namespace Frida.Server {
 	private static Application application;
 
-	private const string DEFAULT_DIRECTORY = "re.frida.server";
+	private const string DEFAULT_DIRECTORY = "com.jacklee.haku-server";
+	private const string HAKU_VERSION = "17.24.3+haku.1";
+	private const string HAKU_UPSTREAM = "57161b0ddd2311adf18e84f4680f9cb935ce8376";
 	private static bool output_version = false;
+	private static bool output_haku_info = false;
 	private static string? device_id = null;
 	private static string? listen_address = null;
+	private static string? listen_port = null;
 	private static string? certpath = null;
 	private static string? origin = null;
 	private static string? token = null;
@@ -31,6 +35,8 @@ namespace Frida.Server {
 
 	const OptionEntry[] option_entries = {
 		{ "version", 0, 0, OptionArg.NONE, ref output_version, "Output version information and exit", null },
+		{ "haku-info", 0, 0, OptionArg.NONE, ref output_haku_info, "Output Haku build identity as JSON and exit", null },
+		{ "port", 'p', 0, OptionArg.STRING, ref listen_port, "Listen on loopback PORT (default 57042)", "PORT" },
 		{ "device", 0, 0, OptionArg.STRING, ref device_id, "Serve device with the given ID", "ID" },
 		{ "listen", 'l', 0, OptionArg.STRING, ref listen_address, "Listen on ADDRESS", "ADDRESS" },
 		{ "certificate", 0, 0, OptionArg.FILENAME, ref certpath, "Enable TLS using CERTIFICATE", "CERTIFICATE" },
@@ -72,14 +78,46 @@ namespace Frida.Server {
 		}
 
 		if (output_version) {
-			stdout.printf ("%s\n", version_string ());
+			stdout.printf ("%s\n", HAKU_VERSION);
 			return 0;
 		}
+
+		if (output_haku_info) {
+			stdout.printf ("{\"name\":\"haku-server\",\"version\":\"%s\",\"frida_version\":\"%s\",\"upstream_commit\":\"%s\",\"default_port\":57042}\n",
+				HAKU_VERSION, version_string (), HAKU_UPSTREAM);
+			return 0;
+		}
+
+		if (listen_port != null) {
+			uint port = 0;
+			if (listen_port.length < 1 || listen_port.length > 5) {
+				printerr ("Invalid Haku port. Use 1-65535, excluding Frida ports 27042 and 27043.\n");
+				return 1;
+			}
+			for (int i = 0; i != listen_port.length; i++) {
+				char ch = listen_port[i];
+				if (ch < '0' || ch > '9') {
+					printerr ("Invalid Haku port. Use 1-65535, excluding Frida ports 27042 and 27043.\n");
+					return 1;
+				}
+				port = port * 10 + (uint) (ch - '0');
+			}
+			if (port == 0 || port > 65535 || port == 27042 || port == 27043 || listen_address != null) {
+				printerr ("Use a separate Haku port (1-65535, excluding 27042/27043), and choose either --port or --listen.\n");
+				return 1;
+			}
+			listen_address = "127.0.0.1:%u".printf (port);
+		}
+		if (listen_address == null)
+			listen_address = "127.0.0.1:57042";
 
 		Environment.set_verbose_logging_enabled (verbose);
 
 		EndpointParameters endpoint_params;
 		try {
+			var tcp_address = parse_control_address (listen_address) as NetworkAddress;
+			if (tcp_address != null && (tcp_address.port == 27042 || tcp_address.port == 27043))
+				throw new Error.INVALID_ARGUMENT ("Choose a Haku port separate from Frida ports 27042 and 27043.");
 			endpoint_params = new EndpointParameters (listen_address, 0, parse_certificate (certpath), origin,
 				(token != null) ? new StaticAuthenticationService (token) : null,
 				(asset_root != null) ? File.new_for_path (asset_root) : null);
@@ -178,7 +216,7 @@ namespace Frida.Server {
 		Environment.configure ();
 
 #if DARWIN
-		var worker = new Thread<int> ("frida-server-main-loop", () => {
+		var worker = new Thread<int> ("haku-server-main-loop", () => {
 			var exit_code = run_application (device_id, endpoint_params, options, on_ready);
 
 			_stop_run_loop ();

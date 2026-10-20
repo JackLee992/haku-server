@@ -823,8 +823,8 @@ GADGET_FILE_WINDOWS = Path("lib") / "gadget" / "frida-gadget.dll"
 GADGET_FILE_DARWIN = Path("lib") / "gadget" / "frida-gadget.dylib"
 GADGET_FILE_ELF = Path("lib") / "gadget" / "frida-gadget.so"
 
-SERVER_TARGET = "frida-server"
-SERVER_FILE_UNIX = Path("server") / "frida-server"
+SERVER_TARGET = "haku-server"
+SERVER_FILE_UNIX = Path("server") / "haku-server"
 
 MSVS_ENVVARS = {
     "PLATFORM",

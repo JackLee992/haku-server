@@ -1,88 +1,85 @@
-# frida-core
+# haku-server
 
-Frida core library.
+Haku's maintained source fork of [Frida Core](https://github.com/frida/frida-core),
+based on **17.24.3**, for rootless iOS. It supplies Haku with its own executable,
+Debian package, launchd service and loopback port configuration.
 
-- Lets you inject your own JavaScript instrumentation code
-  into other processes, optionally with your own [C code][]
-  for performance-sensitive bits.
-- Acts as a logistics layer that packages up [GumJS][] into
-  a shared library.
-- Provides a two-way communication channel for talking to
-  your scripts, if needed, and later unload them.
-- Also lets you enumerate installed apps, running processes,
-  and connected devices.
-- Written in [Vala][], with OS-specific glue code in
-  C/Objective-C/asm.
+| Setting | haku-server | Ordinary Frida |
+| --- | --- | --- |
+| Default endpoint | `127.0.0.1:57042` | `127.0.0.1:27042` |
+| Package | `com.jacklee.haku-server` | `re.frida.server` |
+| launchd label | `com.jacklee.haku-server` | `re.frida.server` |
+| Executable | `/var/jb/usr/sbin/haku-server` | Separate upstream installation |
 
-## Binaries
+The package neither replaces nor stops the upstream Frida service. Haku port
+settings reject `27042` and `27043` to keep them separate. The Frida **17.24.3
+wire protocol** remains compatible. This fork changes naming, configuration and
+packaging. Use it only on devices and applications you own or are authorized to
+assess.
 
-Typically used through one of the available language bindings:
+## Install and configure
 
-- [Python][]
-- [Node.js][]
-- [.NET][]
-- [Swift][]
-- [Qml][]
+Install the `.deb` from [Releases](https://github.com/JackLee992/haku-server/releases)
+with Sileo, then install Haku 0.2.0 or later. Both default to port `57042`.
 
-E.g.:
+To change the daemon's port, run as root on the phone:
 
-```console
-$ pip install frida-tools # CLI tools
-$ pip install frida # Python bindings
-$ npm install frida # Node.js bindings
+```sh
+hakuctl port 58000
+hakuctl status
 ```
 
-Or, for static linking into your own project written in a
-C-compatible language, download a devkit from the Frida
-[releases][] page.
+Then enter **58000** in **Haku > Connection > Port > Save**. The app's setting is
+its connection destination; `hakuctl` changes and restarts the daemon. Configuration
+is stored as data in `/var/jb/etc/haku-server.port` and preserved across upgrades.
+`hakuctl port` reads the current value. `start`, `stop`, and `restart` control only
+the Haku service.
 
-## Distro Packaging
+For a manually managed instance, `haku-server --port 58000` binds to loopback.
+Upstream `--listen ADDRESS`, TLS and token options remain available; use an
+explicit port with `--listen`. `--port` and `--listen` are mutually exclusive.
+`--haku-info` prints the fork identity, pinned upstream revision and protocol
+version as JSON. `--version` reports `17.24.3+haku.1`.
 
-For building a shared library suitable for distro packaging:
+## Build from source
 
-```console
-$ ./configure --enable-shared --without-prebuilds=sdk && make
+Requirements: Apple Silicon macOS, full Xcode with iPhoneOS SDK, Python 3.10+,
+Node.js 18+, make and `ldid` (`brew install ldid`).
+
+```sh
+git clone --branch haku https://github.com/JackLee992/haku-server.git
+cd haku-server
+git submodule update --init --recursive
+python3 -m unittest discover -s haku/tests -v
+python3 haku/build.py
 ```
 
-This builds `libfrida-core-1.0.so` against system dependencies,
-while `frida-agent.so` is built using Frida's SDK (with its GLib
-fork, needed for the agent's inject/unload lifecycle).
+The upstream build system fetches its versioned toolchain/dependency SDKs and
+the pinned Frida Gum source. The server, helper and agent are compiled from
+source. The build uses local ad-hoc signing, then `ldid` with
+`server/haku-server.xcent`; `LDID` may name an absolute executable path.
+Output is `dist/com.jacklee.haku-server_17.24.3+haku.1_iphoneos-arm64.deb`
+and `dist/build.json`, including source and binary hashes and submodule revisions.
 
-Prerequisites on Fedora:
+This first package targets iOS 15+ rootless `/var/jb`, arm64 application processes,
+with compatibility payloads disabled. Other jailbreak layouts, arm64e/system
+targets and other device/OS combinations have not been validated. See
+[validation](haku/VALIDATION.md) for the measured acceptance boundary.
 
-```console
-$ sudo dnf install libgee-devel json-glib-devel \
-      libsoup3-devel libunwind-devel libdwarf-devel \
-      libnice-devel ngtcp2-crypto-ossl-devel
-```
+## Maintenance and license
 
-Prerequisites on Ubuntu:
+The `haku` branch is the maintained product branch. Keep changes small against
+the upstream tag recorded in [haku/upstream.json](haku/upstream.json), updating
+the matching Haku client devkit and server dependency together. Upstream remains
+available at `https://github.com/frida/frida-core`; retain its history and license
+notices when updating the base. The original README and CI configuration are
+retained in [haku/README.upstream.md](haku/README.upstream.md) and
+[haku/upstream-ci.yml](haku/upstream-ci.yml).
 
-```console
-$ sudo apt install libgee-0.8-dev libjson-glib-dev \
-      libsoup-3.0-dev libunwind-dev libdwarf-dev \
-      libnice-dev libngtcp2-crypto-ossl-dev
-```
+GitHub Actions builds the rootless package and publishes tagged prereleases.
+Physical-device tests are separate from CI. The account's current billing gate
+blocks hosted jobs; local release validation is recorded explicitly.
 
-Prerequisites on macOS:
-
-```console
-$ brew install libgee json-glib libsoup libnice capstone
-```
-
-## Internals
-
-For a higher level view of the internals, check out the [architecture diagram][]
-and its links to the different parts of the codebase.
-
-
-[C code]: https://frida.re/docs/javascript-api/#cmodule
-[Vala]: https://wiki.gnome.org/Projects/Vala
-[GumJS]: https://github.com/frida/frida-gum
-[Python]: https://github.com/frida/frida-python
-[Node.js]: https://github.com/frida/frida-node
-[.NET]: https://github.com/frida/frida-clr
-[Swift]: https://github.com/frida/frida-swift
-[Qml]: https://github.com/frida/frida-qml
-[releases]: https://github.com/frida/frida/releases
-[architecture diagram]: https://frida.re/docs/hacking/
+Frida Core and these modifications are under the upstream terms in
+[COPYING](COPYING). Frida dependency notices remain in their original sources.
+No real application captures, credentials or device identifiers belong here.

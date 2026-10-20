@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/frida/frida-core",
+  "tag": "17.24.3",
+  "commit": "57161b0ddd2311adf18e84f4680f9cb935ce8376",
+  "frida_protocol_version": "17.24.3",
+  "haku_server_version": "17.24.3+haku.1",
+  "default_port": 57042
+}

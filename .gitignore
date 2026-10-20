@@ -27,3 +27,7 @@
 /src/linux/helpers/build/
 /src/linux/helpers/ext/
 /subprojects/*
+/.haku-build/
+/dist/
+/haku/__pycache__/
+/haku/tests/__pycache__/
