@@ -61,8 +61,8 @@ source. The build uses local ad-hoc signing, then `ldid` with
 Output is `dist/com.jacklee.haku-server_17.24.3+haku.1_iphoneos-arm64.deb`
 and `dist/build.json`, including source and binary hashes and submodule revisions.
 
-This first package targets iOS 15+ rootless `/var/jb`, arm64 application processes,
-with compatibility payloads disabled. Other jailbreak layouts, arm64e/system
+This package targets iOS 15+ rootless `/var/jb` and embeds arm64 and arm64e
+helper/agent payloads for iOS app startup. Other jailbreak layouts, system
 targets and other device/OS combinations have not been validated. See
 [validation](haku/VALIDATION.md) for the measured acceptance boundary.
 

@@ -94,7 +94,7 @@ def main():
     submodules=subprocess.check_output(["git","submodule","status","--recursive"],cwd=ROOT,text=True).strip().splitlines()
     gum_revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT/"subprojects/frida-gum",text=True).strip()
     dirty=bool(subprocess.check_output(["git","status","--porcelain"],cwd=ROOT,text=True).strip())
-    metadata=dict(IDENTITY,source_revision=revision,source_sha256=digest.hexdigest(),source_dirty=dirty,submodules=submodules,gum_revision=gum_revision,binary_sha256=hashlib.sha256(a.binary.read_bytes()).hexdigest(),build_type="compiled from source",architecture="ios-arm64",minimum_ios="15.0",compat="disabled")
+    metadata=dict(IDENTITY,source_revision=revision,source_sha256=digest.hexdigest(),source_dirty=dirty,submodules=submodules,gum_revision=gum_revision,binary_sha256=hashlib.sha256(a.binary.read_bytes()).hexdigest(),build_type="compiled from source",architecture="ios-arm64",minimum_ios="15.0",compat="native",payload_architectures=["arm64","arm64e"])
     dist=ROOT/"dist";dist.mkdir(exist_ok=True)
     target=dist/f"com.jacklee.haku-server_{IDENTITY['haku_server_version']}_iphoneos-arm64.deb"
     package(a.binary,target,metadata)
