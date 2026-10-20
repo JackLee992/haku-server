@@ -4,6 +4,7 @@ import io
 import json
 import plistlib
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -83,6 +84,13 @@ class RootlessPackageTests(unittest.TestCase):
                 self.assertTrue(script.startswith(b"#!/var/jb/usr/bin/sh\n"))
                 self.assertNotIn(b"re.frida.server", script)
                 subprocess.run(["sh", "-n"], input=script, check=True)
+
+
+class ProjectVersionTests(unittest.TestCase):
+    def test_branded_tags_keep_the_pinned_protocol_version(self):
+        result = subprocess.run([sys.executable, str(ROOT / "tools/detect-version.py")], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), packager.IDENTITY["frida_protocol_version"])
 
 
 class ShellPortTests(unittest.TestCase):

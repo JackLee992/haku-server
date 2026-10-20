@@ -11,7 +11,7 @@ port. It does not modify the existing Frida package or its launchd service.
 
 | Gate | Result |
 | --- | --- |
-| Host package, shell port and asynchronous restart regression checks | 7 passed |
+| Host package, shell port, asynchronous restart and branded-tag version checks | 8 passed |
 | Haku client integrity and connection checks | 21 passed |
 | Universal source build and all-architecture signature verification | Passed |
 | Rootless package install, service start and application enumeration | Passed |
@@ -45,3 +45,8 @@ metadata. Existing release assets are preserved by reruns of the publishing job.
 GitHub Actions validates source builds separately; it does not run physical iOS
 or GUI tests. Acquisition validation does not establish signing, reinstallation,
 ordinary launch or functional behavior of an exported application.
+
+The initial release tag exposed upstream version discovery rejecting the
+`haku-v` prefix. The maintained branch now reads the core project version from
+the pinned protocol manifest, with a regression check. The published prerelease
+assets remain the locally built and device-validated artifacts above.

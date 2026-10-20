@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 import sys
 from typing import Iterator
@@ -8,6 +9,10 @@ SOURCE_ROOT = Path(__file__).resolve().parent.parent
 
 
 def detect_version() -> str:
+    haku_identity = SOURCE_ROOT / "haku/upstream.json"
+    if haku_identity.exists():
+        # Haku release tags name the fork; the core protocol version stays pinned.
+        return json.loads(haku_identity.read_text())["frida_protocol_version"]
     releng_location = next(enumerate_releng_locations(), None)
     if releng_location is not None:
         sys.path.insert(0, str(releng_location.parent))
