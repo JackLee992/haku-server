@@ -20,3 +20,7 @@ haku_launchctl() {
     echo 'launchctl is unavailable.' >&2
     return 127
 }
+haku_restart() {
+    haku_launchctl bootout system/com.jacklee.haku-server >/dev/null 2>&1 || true
+    haku_launchctl bootstrap system /var/jb/Library/LaunchDaemons/com.jacklee.haku-server.plist
+}

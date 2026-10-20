@@ -64,7 +64,8 @@ class RootlessPackageTests(unittest.TestCase):
         with self.archive("data.tar.gz") as archive:
             daemon = plistlib.load(archive.extractfile("./var/jb/Library/LaunchDaemons/com.jacklee.haku-server.plist"))
             self.assertEqual(daemon["Label"], "com.jacklee.haku-server")
-            self.assertEqual(daemon["ProgramArguments"], ["/var/jb/usr/libexec/haku-server-launcher"])
+            self.assertEqual(daemon["Program"], "/var/jb/usr/bin/sh")
+            self.assertEqual(daemon["ProgramArguments"], ["/var/jb/usr/bin/sh", "/var/jb/usr/libexec/haku-server-launcher"])
             self.assertEqual(daemon["UserName"], "root")
             self.assertTrue(daemon["RunAtLoad"])
             self.assertTrue(daemon["KeepAlive"])

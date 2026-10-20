@@ -43,7 +43,7 @@ version as JSON. `--version` reports `17.24.3+haku.1`.
 
 ## Build from source
 
-Requirements: Apple Silicon macOS, full Xcode with iPhoneOS SDK, Python 3.10+,
+Requirements: Apple Silicon macOS, Xcode 26.5+ with iPhoneOS SDK, Python 3.10+,
 Node.js 18+, make and `ldid` (`brew install ldid`).
 
 ```sh
@@ -76,9 +76,9 @@ notices when updating the base. The original README and CI configuration are
 retained in [haku/README.upstream.md](haku/README.upstream.md) and
 [haku/upstream-ci.yml](haku/upstream-ci.yml).
 
-GitHub Actions builds the rootless package and publishes tagged prereleases.
-Physical-device tests are separate from CI. The account's current billing gate
-blocks hosted jobs; local release validation is recorded explicitly.
+GitHub Actions builds the rootless package on macOS 26 with Xcode 26.5 and
+publishes tagged prereleases. Physical-device tests are separate from CI.
+Local release validation is recorded explicitly.
 
 Frida Core and these modifications are under the upstream terms in
 [COPYING](COPYING). Frida dependency notices remain in their original sources.

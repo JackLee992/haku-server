@@ -53,7 +53,7 @@ fi
 case "$1" in remove|upgrade|deconfigure) haku_launchctl bootout system/com.jacklee.haku-server >/dev/null 2>&1 || true ;; esac
 """
     control_tar=compressed_tar([("./control",control.encode(),0o644),("./postinst",postinst.encode(),0o755),("./prerm",prerm.encode(),0o755),("./conffiles",b"/var/jb/etc/haku-server.port\n",0o644)])
-    daemon={"Label":"com.jacklee.haku-server","ProgramArguments":["/var/jb/usr/libexec/haku-server-launcher"],"UserName":"root","RunAtLoad":True,"KeepAlive":True,"ThrottleInterval":10,"StandardOutPath":"/var/jb/var/log/haku-server.log","StandardErrorPath":"/var/jb/var/log/haku-server.log"}
+    daemon={"Label":"com.jacklee.haku-server","Program":"/var/jb/usr/bin/sh","ProgramArguments":["/var/jb/usr/bin/sh","/var/jb/usr/libexec/haku-server-launcher"],"UserName":"root","RunAtLoad":True,"KeepAlive":True,"ThrottleInterval":10,"StandardOutPath":"/var/jb/var/log/haku-server.log","StandardErrorPath":"/var/jb/var/log/haku-server.log"}
     payload={
         "usr/sbin/haku-server":(binary.read_bytes(),0o755),
         "usr/bin/hakuctl":((ROOT/"haku/packaging/hakuctl.sh").read_bytes(),0o755),

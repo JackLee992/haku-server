@@ -16,12 +16,12 @@ case "${1:-}" in
         printf '%s\n' "$2" > "$HAKU_TEMP"
         chmod 644 "$HAKU_TEMP"
         mv -f "$HAKU_TEMP" /var/jb/etc/haku-server.port
-        haku_launchctl kickstart -k "$HAKU_LABEL"
+        haku_restart
         printf 'haku-server configured for 127.0.0.1:%s. Set the same port in Haku > Connection.\n' "$2"
         ;;
     restart|stop)
         if [ "$(id -u)" != 0 ]; then echo 'Controlling the server requires root.' >&2; exit 1; fi
-        if [ "$1" = restart ]; then haku_launchctl kickstart -k "$HAKU_LABEL";
+        if [ "$1" = restart ]; then haku_restart;
         else haku_launchctl bootout "$HAKU_LABEL"; fi
         ;;
     start)
