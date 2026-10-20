@@ -30,8 +30,6 @@ jobs:
           node-version: '22'
       - name: Test package and configuration
         run: python3 -m unittest discover -s haku/tests -v
-      - name: Install signing tool
-        run: brew install ldid
       - name: Build from source
         run: python3 haku/build.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -54,4 +52,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           HAKU_TAG: ${{ github.ref_name }}
-        run: gh release create "$HAKU_TAG" dist/* --title "haku-server $HAKU_TAG" --prerelease --generate-notes
+        run: |
+          if gh release view "$HAKU_TAG" >/dev/null 2>&1; then
+            echo "Release exists; preserving its published assets."
+          else
+            gh release create "$HAKU_TAG" dist/* --verify-tag --title "haku-server $HAKU_TAG" --prerelease --generate-notes
+          fi

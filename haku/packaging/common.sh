@@ -22,5 +22,14 @@ haku_launchctl() {
 }
 haku_restart() {
     haku_launchctl bootout system/com.jacklee.haku-server >/dev/null 2>&1 || true
+    HAKU_RESTART_WAIT=0
+    while haku_launchctl print system/com.jacklee.haku-server >/dev/null 2>&1; do
+        HAKU_RESTART_WAIT=$((HAKU_RESTART_WAIT+1))
+        if [ "$HAKU_RESTART_WAIT" -ge 40 ]; then
+            echo 'The previous haku-server service did not stop within 10 seconds.' >&2
+            return 1
+        fi
+        sleep 0.25
+    done
     haku_launchctl bootstrap system /var/jb/Library/LaunchDaemons/com.jacklee.haku-server.plist
 }

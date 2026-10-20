@@ -42,10 +42,11 @@ Homepage: https://github.com/JackLee992/haku-server
 """
     postinst="""#!/var/jb/usr/bin/sh
 set -eu
+PATH=/var/jb/usr/bin:/var/jb/usr/sbin:/usr/bin:/bin:/usr/sbin:/sbin
+export PATH
 . /var/jb/usr/libexec/haku-server-common.sh
 if [ "$1" = configure ]; then
-    haku_launchctl bootout system/com.jacklee.haku-server >/dev/null 2>&1 || true
-    haku_launchctl bootstrap system /var/jb/Library/LaunchDaemons/com.jacklee.haku-server.plist
+    haku_restart
 fi
 """
     prerm="""#!/var/jb/usr/bin/sh
@@ -82,8 +83,12 @@ case "$1" in remove|upgrade|deconfigure) haku_launchctl bootout system/com.jackl
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--binary",type=Path,default=ROOT/"build/server/haku-server")
+    p.add_argument("--binary",type=Path,default=ROOT/"build/haku-server")
     a=p.parse_args()
+    architectures=subprocess.check_output(["xcrun","lipo","-archs",str(a.binary)],text=True).strip().split()
+    if set(architectures)!={"arm64","arm64e"}:
+        raise SystemExit("The release server must contain both arm64 and arm64e slices")
+    subprocess.run(["codesign","--verify","--strict","--all-architectures",str(a.binary)],check=True)
     revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT,text=True).strip()
     paths=subprocess.check_output(["git","ls-files","-c","-o","--exclude-standard","-z"],cwd=ROOT).split(b"\0")
     digest=hashlib.sha256()
@@ -94,7 +99,7 @@ def main():
     submodules=subprocess.check_output(["git","submodule","status","--recursive"],cwd=ROOT,text=True).strip().splitlines()
     gum_revision=subprocess.check_output(["git","rev-parse","HEAD"],cwd=ROOT/"subprojects/frida-gum",text=True).strip()
     dirty=bool(subprocess.check_output(["git","status","--porcelain"],cwd=ROOT,text=True).strip())
-    metadata=dict(IDENTITY,source_revision=revision,source_sha256=digest.hexdigest(),source_dirty=dirty,submodules=submodules,gum_revision=gum_revision,binary_sha256=hashlib.sha256(a.binary.read_bytes()).hexdigest(),build_type="compiled from source",architecture="ios-arm64",minimum_ios="15.0",compat="native",payload_architectures=["arm64","arm64e"])
+    metadata=dict(IDENTITY,source_revision=revision,source_sha256=digest.hexdigest(),source_dirty=dirty,submodules=submodules,gum_revision=gum_revision,binary_sha256=hashlib.sha256(a.binary.read_bytes()).hexdigest(),build_type="compiled from source",architecture="ios-universal",executable_architectures=architectures,minimum_ios="15.0",compat="native",payload_architectures=["arm64","arm64e"],signing="Apple codesign ad-hoc")
     dist=ROOT/"dist";dist.mkdir(exist_ok=True)
     target=dist/f"com.jacklee.haku-server_{IDENTITY['haku_server_version']}_iphoneos-arm64.deb"
     package(a.binary,target,metadata)

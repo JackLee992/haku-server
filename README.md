@@ -44,7 +44,7 @@ version as JSON. `--version` reports `17.24.3+haku.1`.
 ## Build from source
 
 Requirements: Apple Silicon macOS, Xcode 26.5+ with iPhoneOS SDK, Python 3.10+,
-Node.js 18+, make and `ldid` (`brew install ldid`).
+Node.js 18+ and the Xcode command-line tools.
 
 ```sh
 git clone --branch haku https://github.com/JackLee992/haku-server.git
@@ -56,13 +56,14 @@ python3 haku/build.py
 
 The upstream build system fetches its versioned toolchain/dependency SDKs and
 the pinned Frida Gum source. The server, helper and agent are compiled from
-source. The build uses local ad-hoc signing, then `ldid` with
-`server/haku-server.xcent`; `LDID` may name an absolute executable path.
+source for arm64 and arm64e. The build combines the server slices into a
+universal executable and uses Apple's ad-hoc signing with
+`server/haku-server.xcent`, including an all-architecture signature check.
 Output is `dist/com.jacklee.haku-server_17.24.3+haku.1_iphoneos-arm64.deb`
 and `dist/build.json`, including source and binary hashes and submodule revisions.
 
-This package targets iOS 15+ rootless `/var/jb` and embeds arm64 and arm64e
-helper/agent payloads for iOS app startup. Other jailbreak layouts, system
+This package targets iOS 15+ rootless `/var/jb`, with arm64 and arm64e server
+slices and embedded helper/agent payloads for iOS app startup. Other jailbreak layouts, system
 targets and other device/OS combinations have not been validated. See
 [validation](haku/VALIDATION.md) for the measured acceptance boundary.
 

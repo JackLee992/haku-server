@@ -86,6 +86,25 @@ class RootlessPackageTests(unittest.TestCase):
 
 
 class ShellPortTests(unittest.TestCase):
+    def test_restart_waits_for_asynchronous_service_removal(self):
+        script = r'''
+. "$1"
+pending=0
+started=no
+haku_launchctl() {
+    case "$1" in
+        bootout) pending=2 ;;
+        print) if [ "$pending" -gt 0 ]; then pending=$((pending-1)); return 0; else return 1; fi ;;
+        bootstrap) [ "$pending" = 0 ] || return 37; started=yes ;;
+    esac
+}
+sleep() { :; }
+haku_restart || exit 1
+[ "$started" = yes ]
+'''
+        result = subprocess.run(["sh", "-c", script, "test", str(ROOT / "haku/packaging/common.sh")])
+        self.assertEqual(result.returncode, 0)
+
     def check_port(self, port):
         return subprocess.run(["sh", "-c", '. "$1"; haku_valid_port "$2"', "test", str(ROOT / "haku/packaging/common.sh"), port], capture_output=True).returncode
 
