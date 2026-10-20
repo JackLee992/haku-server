@@ -71,7 +71,7 @@ namespace Frida.Server {
 			ctx.set_help_enabled (true);
 			ctx.add_main_entries (option_entries, null);
 			ctx.parse (ref args);
-		} catch (OptionError e) {
+		} catch (GLib.Error e) {
 			printerr ("%s\n", e.message);
 			printerr ("Run '%s --help' to see a full list of available command line options.\n", args[0]);
 			return 1;
