@@ -56,6 +56,18 @@ explicit port with `--listen`. `--port` and `--listen` are mutually exclusive.
 `--haku-info` prints the fork identity, pinned upstream revision and protocol
 version as JSON. `--version` reports `17.24.3+haku.2`.
 
+## Native Mac companion
+
+[Haku Mac](https://github.com/JackLee992/haku-mac) is maintained in a separate
+private repository, with this server source pinned as a Git submodule. Its manga
+interface lists the phone's applications, runs the installed Haku engine over
+trusted SSH, retrieves the IPA and report, and verifies the local archive.
+It supports separate SSH/Haku ports and optional managed USB forwarding.
+Install the phone packages above first. The
+[Mac release](https://github.com/JackLee992/haku-mac/releases/tag/v0.1.0) is an
+arm64 macOS 14+ package with an ad-hoc signature; it requires repository access
+and is not notarized. See its README for setup and measured validation.
+
 ## Build from source
 
 Requirements: Apple Silicon macOS, Xcode 26.5+ with iPhoneOS SDK, Python 3.10+,
