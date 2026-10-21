@@ -19,8 +19,19 @@ assess.
 
 ## Install and configure
 
-Install the `.deb` from [Releases](https://github.com/JackLee992/haku-server/releases)
-with Sileo, then install Haku 0.2.0 or later. Both default to port `57042`.
+Download the rootless `.deb` from the
+[17.24.3+haku.1 release](https://github.com/JackLee992/haku-server/releases/tag/haku-v17.24.3-haku.1),
+save it to Files on the phone, and use **Share → Sileo** to install it. Complete
+the server installation before installing **Haku 0.2.1** (0.2.0 also uses this
+server version). Both default to port `57042`.
+
+**[Complete Sileo installation](haku/INSTALLATION.md) ·
+[Custom-port guide](haku/PORTS.md) · [Validation results](haku/VALIDATION.md)**
+
+The Haku client repository is currently private; its downloads require access.
+There is no hosted Haku APT source, so GitHub URLs should not be entered as
+Sileo source addresses. The local-package installation flow and terminal
+alternative are documented in the installation guide.
 
 To change the daemon's port, run as root on the phone:
 
@@ -34,6 +45,11 @@ its connection destination; `hakuctl` changes and restarts the daemon. Configura
 is stored as data in `/var/jb/etc/haku-server.port` and preserved across upgrades.
 `hakuctl port` reads the current value. `start`, `stop`, and `restart` control only
 the Haku service.
+
+Run Haku's `--set-port` commands as **mobile** to configure the GUI user's
+preference. A one-command `Haku --port PORT --list` override does not change
+the daemon or the saved client preference. See the port guide for complete
+examples, a default reset and optional SSH forwarding.
 
 For a manually managed instance, `haku-server --port 58000` binds to loopback.
 Upstream `--listen ADDRESS`, TLS and token options remain available; use an
