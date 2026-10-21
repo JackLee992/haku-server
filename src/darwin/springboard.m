@@ -79,6 +79,12 @@ _frida_get_springboard_api (void)
       FRIDA_ASSIGN_FBS_CONSTANT (FBSOpenApplicationOptionKeyUnlockDevice);
       FRIDA_ASSIGN_FBS_CONSTANT (FBSOpenApplicationOptionKeyDebuggingOptions);
 
+      /* Optional: an explicitly requested background launch must fail rather
+       * than activate the suspended target in front of the capture UI. */
+      str = dlsym (api->fbs, "FBSOpenApplicationOptionKeyActivateSuspended");
+      if (str != NULL)
+        api->FBSOpenApplicationOptionKeyActivateSuspended = *str;
+
       FRIDA_ASSIGN_FBS_CONSTANT (FBSDebugOptionKeyArguments);
       FRIDA_ASSIGN_FBS_CONSTANT (FBSDebugOptionKeyEnvironment);
       FRIDA_ASSIGN_FBS_CONSTANT (FBSDebugOptionKeyStandardOutPath);

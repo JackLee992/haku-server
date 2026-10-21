@@ -2,7 +2,7 @@ namespace Frida.Server {
 	private static Application application;
 
 	private const string DEFAULT_DIRECTORY = "com.jacklee.haku-server";
-	private const string HAKU_VERSION = "17.24.3+haku.1";
+	private const string HAKU_VERSION = "17.24.3+haku.2";
 	private const string HAKU_UPSTREAM = "57161b0ddd2311adf18e84f4680f9cb935ce8376";
 	private static bool output_version = false;
 	private static bool output_haku_info = false;

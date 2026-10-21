@@ -974,9 +974,9 @@ invalid_pid:
 #import "springboard.h"
 
 static void frida_darwin_helper_backend_launch_using_fbs (NSString * identifier, NSURL * url, FridaHostSpawnOptions * spawn_options,
-    FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target);
+    gboolean background, FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target);
 static void frida_darwin_helper_backend_launch_using_sbs (NSString * identifier, NSURL * url, FridaHostSpawnOptions * spawn_options,
-    FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target);
+    gboolean background, FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target);
 #ifdef HAVE_TVOS
 static void frida_darwin_helper_backend_launch_using_lsaw (NSString * identifier, NSURL * url, FridaHostSpawnOptions * spawn_options,
     FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target);
@@ -998,12 +998,26 @@ _frida_darwin_helper_backend_launch (const gchar * identifier, FridaHostSpawnOpt
   NSAutoreleasePool * pool;
   NSString * identifier_value;
   GVariant * url;
+  GVariant * background_value;
+  gboolean background = FALSE;
   NSURL * url_value = nil;
   GError * error = NULL;
 
   pool = [[NSAutoreleasePool alloc] init];
 
   identifier_value = [NSString stringWithUTF8String:identifier];
+
+  background_value = g_hash_table_lookup (options->aux, "haku-background");
+  if (background_value != NULL)
+  {
+    if (!g_variant_is_of_type (background_value, G_VARIANT_TYPE_BOOLEAN))
+    {
+      error = g_error_new_literal (FRIDA_ERROR, FRIDA_ERROR_INVALID_ARGUMENT,
+          "The 'haku-background' option must be a boolean");
+      goto failure;
+    }
+    background = g_variant_get_boolean (background_value);
+  }
 
   url = g_hash_table_lookup (options->aux, "url");
   if (url != NULL)
@@ -1014,17 +1028,23 @@ _frida_darwin_helper_backend_launch (const gchar * identifier, FridaHostSpawnOpt
   }
 
 #ifdef HAVE_TVOS
+  if (background)
+  {
+    error = g_error_new_literal (FRIDA_ERROR, FRIDA_ERROR_NOT_SUPPORTED,
+        "Background application launch is not supported by this launcher");
+    goto failure;
+  }
   frida_darwin_helper_backend_launch_using_lsaw (identifier_value, url_value, options, on_complete, on_complete_target);
   goto beach;
 #endif
 
   if (_frida_get_springboard_api ()->fbs != NULL)
   {
-    frida_darwin_helper_backend_launch_using_fbs (identifier_value, url_value, options, on_complete, on_complete_target);
+    frida_darwin_helper_backend_launch_using_fbs (identifier_value, url_value, options, background, on_complete, on_complete_target);
   }
   else
   {
-    frida_darwin_helper_backend_launch_using_sbs (identifier_value, url_value, options, on_complete, on_complete_target);
+    frida_darwin_helper_backend_launch_using_sbs (identifier_value, url_value, options, background, on_complete, on_complete_target);
   }
 
   goto beach;
@@ -1050,7 +1070,7 @@ beach:
 
 static void
 frida_darwin_helper_backend_launch_using_fbs (NSString * identifier, NSURL * url, FridaHostSpawnOptions * spawn_options,
-    FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target)
+    gboolean background, FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target)
 {
   FridaSpringboardApi * api;
   NSMutableDictionary * debug_options, * open_options;
@@ -1073,6 +1093,17 @@ frida_darwin_helper_backend_launch_using_fbs (NSString * identifier, NSURL * url
                    forKey:api->FBSOpenApplicationOptionKeyUnlockDevice];
   [open_options setObject:debug_options
                    forKey:api->FBSOpenApplicationOptionKeyDebuggingOptions];
+
+  if (background)
+  {
+    if (api->FBSOpenApplicationOptionKeyActivateSuspended == nil)
+    {
+      error = g_error_new_literal (FRIDA_ERROR, FRIDA_ERROR_NOT_SUPPORTED,
+          "This iOS version does not support background application launch");
+      goto failure;
+    }
+    [open_options setObject:@YES forKey:api->FBSOpenApplicationOptionKeyActivateSuspended];
+  }
 
   if (spawn_options->has_argv)
   {
@@ -1201,7 +1232,7 @@ beach:
 
 static void
 frida_darwin_helper_backend_launch_using_sbs (NSString * identifier, NSURL * url, FridaHostSpawnOptions * spawn_options,
-    FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target)
+    gboolean background, FridaDarwinHelperBackendLaunchCompletionHandler on_complete, void * on_complete_target)
 {
   FridaSpringboardApi * api;
   NSDictionary * params, * launch_options;
@@ -1250,14 +1281,14 @@ frida_darwin_helper_backend_launch_using_sbs (NSString * identifier, NSURL * url
           url,
           params,
           launch_options,
-          NO);
+          background);
     }
     else
     {
       res = api->SBSLaunchApplicationWithIdentifierAndLaunchOptions (
           identifier,
           launch_options,
-          NO);
+          background);
     }
 
     if (res != 0)

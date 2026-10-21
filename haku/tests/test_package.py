@@ -3,6 +3,7 @@ import importlib.util
 import io
 import json
 import plistlib
+import re
 import subprocess
 import sys
 import tarfile
@@ -87,6 +88,11 @@ class RootlessPackageTests(unittest.TestCase):
 
 
 class ProjectVersionTests(unittest.TestCase):
+    def test_runtime_branding_matches_package_version(self):
+        source = (ROOT / 'server/server.vala').read_text()
+        version = re.search(r'HAKU_VERSION = "([^"]+)"', source).group(1)
+        self.assertEqual(version, packager.IDENTITY['haku_server_version'])
+
     def test_branded_tags_keep_the_pinned_protocol_version(self):
         result = subprocess.run([sys.executable, str(ROOT / "tools/detect-version.py")], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
