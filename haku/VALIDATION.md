@@ -9,6 +9,50 @@ The package installs and controls only `com.jacklee.haku-server`. Its default
 listener is loopback `57042`; the package launcher always uses the configured
 port. It does not modify the existing Frida package or its launchd service.
 
+## 17.24.3+haku.2 with Haku 0.2.2
+
+The final installed pair was validated on **2026-10-21**. The server is built
+from `1a30e4b07c059a22787b27c257baf74ee63e54b3`, with Frida wire protocol
+17.24.3 and the opt-in boolean `haku-background` launch option. Runtime branding
+reports `17.24.3+haku.2`. Its clean universal build and all-architecture Apple
+ad-hoc signature verification passed; **9** maintained host checks passed, and
+the [GitHub source-build run passed](https://github.com/JackLee992/haku-server/actions/runs/39542534072).
+See [BACKGROUND-LAUNCH.md](BACKGROUND-LAUNCH.md) for launch semantics.
+
+The physical Haku GUI regression selected a small-range encrypted target with
+active search, kept Haku active in all **33** samples, completed export and
+presented the share sheet in **9.529 seconds**. It restored the prior idle
+setting and ended its finite background task. This directly verifies the
+background launch behavior that CLI acquisition alone could not establish.
+The test invokes real UIKit callbacks; physical touch and XCTest are separate.
+
+The app's Mach-O independently declares **4,096 encrypted bytes**. Haku copies
+**20,628,414 bytes** of complete app files and exports a **16,297,676-byte IPA**.
+All **60** ZIP members pass independent CRC checks. The **4,886,128-byte** main
+image passes the independent transition comparator, and a new original process
+read through the unchanged upstream USB Frida service produces the exact same
+4,096 plaintext bytes. The already-clear framework matches its original file.
+Thus the small captured count is corroborated by both metadata and contents.
+
+A full final-pair export also passed at **58000**, with the old default port
+rejecting connections. Default **57042** was restored afterward. The original
+Frida daemon PID and binary hash were unchanged across installation. Haku Mac's
+shared core exported/retrieved the small IPA with independent local SHA-256/ZIP
+checks and cancelled a larger export through its exact CLI worker PID, leaving
+a `cancelled` report and no finished IPA. See the
+[matching sanitized record](validation/2026-10-21-0.2.2.json),
+[Sileo guide](INSTALLATION.md) and [port guide](PORTS.md).
+
+A separate development-signed QA copy passed normal iOS installation. Both it
+and an ordinary fresh launch of the installed original produced white USB
+screenshots for 30 seconds. A separate read-only diagnostic confirmed an active
+QA process, responsive main queue and populated SwiftUI view tree. Explicit
+screenshot-protection code is present, which is consistent with capture privacy;
+visible content and app functionality remain unverified. Signing/installation
+and process activation were tested separately from acquisition. No capture
+protection was disabled. Raw captures and identifiers remain private. Sileo
+import remains manual acceptance.
+
 ## Reproducibility rerun and Haku 0.2.1
 
 The installed-suite rerun on **2026-10-21 (Asia/Shanghai)** used Haku 0.2.0 at
